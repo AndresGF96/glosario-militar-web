@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glosario Inteligente</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; padding: 20px; background-color: #f0f2f5; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #1a73e8; }
+        #searchBar { width: 100%; padding: 15px; margin-bottom: 25px; border: 2px solid #dfe1e5; border-radius: 25px; font-size: 16px; outline: none; transition: 0.3s; }
+        #searchBar:focus { border-color: #1a73e8; box-shadow: 0 0 8px rgba(26,115,232,0.2); }
+        .term-list { list-style: none; padding: 0; }
+        .term-item { background: #fff; border: 1px solid #eee; margin-bottom: 10px; padding: 15px; border-radius: 8px; transition: 0.2s; }
+        .term-item:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
+        .term-title { font-weight: bold; color: #1a73e8; font-size: 1.2em; display: block; }
+        .term-definition { color: #444; margin-top: 8px; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📚 Mi Glosario Digital</h1>
+    <input type="text" id="searchBar" placeholder="Buscar un concepto..." onkeyup="filterTerms()">
+    <ul class="term-list" id="termList">
+        </ul>
+</div>
+
+<script>
+    let datosGlosario = [];
+
+    // 1. Cargar los datos desde Sheet.best
+    async function cargarDatos() {
+        try {
+            // Tu URL de Sheet.best ya está aquí
+            const respuesta = await fetch('https://api.sheetbest.com/sheets/6d927b0b-daeb-4fd3-b4a7-860663d0abef');
+            datosGlosario = await respuesta.json();
+            
+            // Verificamos en consola si llegan los datos (puedes verlo con F12)
+            console.log("Datos recibidos:", datosGlosario);
+            
+            mostrarTerminos(datosGlosario);
+        } catch (error) {
+            console.error("Error cargando el glosario:", error);
+            document.getElementById('termList').innerHTML = "<li>Error al cargar los términos.</li>";
+        }
+    }
+
+    // 2. Función para pintar los términos en el HTML (Corregida)
+    function mostrarTerminos(listaParaPintar) {
+        const listaHTML = document.getElementById('termList');
+        listaHTML.innerHTML = ""; 
+
+        // Usamos el nombre correcto de la variable que recibe los datos
+        listaParaPintar.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'term-item';
+            
+            // Usamos Concepto y Definicion tal cual están en tu Google Sheet
+            li.innerHTML = `
+                <span class="term-title">${item.Concepto || 'Sin título'}</span>
+                <div class="term-definition">${item.Definicion || 'Sin definición'}</div>
+            `;
+            listaHTML.appendChild(li);
+        });
+    }
+
+    // 3. Función de búsqueda
+    function filterTerms() {
+        const busqueda = document.getElementById('searchBar').value.toLowerCase();
+        const items = document.getElementsByClassName('term-item');
+
+        Array.from(items).forEach(item => {
+            const texto = item.innerText.toLowerCase();
+            if (texto.includes(busqueda)) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+    }
+
+    // Ejecutar la carga al iniciar
+    cargarDatos();
+</script>
+
+</body>
+</html>
