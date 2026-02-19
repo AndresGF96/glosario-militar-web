@@ -3,26 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glosario Inteligente</title>
+    <title>Glosario Militar Pro</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; padding: 20px; background-color: #f0f2f5; }
-        .container { max-width: 700px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #1a73e8; }
-        #searchBar { width: 100%; padding: 15px; margin-bottom: 25px; border: 2px solid #dfe1e5; border-radius: 25px; font-size: 16px; outline: none; transition: 0.3s; }
-        #searchBar:focus { border-color: #1a73e8; box-shadow: 0 0 8px rgba(26,115,232,0.2); }
+        /* Paleta de colores Militar */
+        :root {
+            --verde-olivo: #4B5320;
+            --verde-tierra: #353a16;
+            --arena: #f2e8cf;
+            --blanco-humo: #f8f9fa;
+            --gris-acero: #495057;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            line-height: 1.6; 
+            padding: 20px; 
+            background-color: #e9ecef; 
+            color: #333;
+        }
+
+        .container { 
+            max-width: 800px; 
+            margin: auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border-top: 8px solid var(--verde-olivo);
+        }
+
+        h1 { text-align: center; color: var(--verde-olivo); text-transform: uppercase; letter-spacing: 2px; }
+
+        /* Estilo de los Botones de Categoría */
+        .categories-nav { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+            justify-content: center; 
+            margin-bottom: 25px; 
+        }
+
+        .btn-cat {
+            background-color: var(--verde-olivo);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .btn-cat:hover {
+            background-color: var(--verde-tierra);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .btn-cat:active { transform: translateY(0); }
+
+        /* Barra de Búsqueda */
+        #searchBar { 
+            width: 100%; 
+            padding: 15px; 
+            margin-bottom: 25px; 
+            border: 2px solid #ced4da; 
+            border-radius: 5px; 
+            font-size: 16px; 
+            outline: none; 
+            box-sizing: border-box;
+        }
+
+        #searchBar:focus { border-color: var(--verde-olivo); box-shadow: 0 0 8px rgba(75, 83, 32, 0.3); }
+
+        /* Tarjetas de Términos */
         .term-list { list-style: none; padding: 0; }
-        .term-item { background: #fff; border: 1px solid #eee; margin-bottom: 10px; padding: 15px; border-radius: 8px; transition: 0.2s; }
-        .term-item:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-        .term-title { font-weight: bold; color: #1a73e8; font-size: 1.2em; display: block; }
-        .term-definition { color: #444; margin-top: 8px; }
-        .hidden { display: none; }
+        .term-item { 
+            background: var(--blanco-humo); 
+            border-left: 5px solid var(--verde-olivo); 
+            margin-bottom: 15px; 
+            padding: 20px; 
+            border-radius: 4px; 
+            animation: fadeIn 0.5s ease;
+        }
+
+        .term-title { font-weight: bold; color: var(--verde-olivo); font-size: 1.3em; display: block; margin-bottom: 5px; }
+        .term-definition { color: #444; font-size: 1.05em; text-align: justify; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📚 Mi Glosario Digital</h1>
-    <input type="text" id="searchBar" placeholder="Buscar un concepto..." onkeyup="filterTerms()">
+    <h1>🎖️ Glosario de Instrucción</h1>
+    
+    <div class="categories-nav">
+        <button onclick="filtrarPorCategoria('Todos')" class="btn-cat">Todos</button>
+        <button onclick="filtrarPorCategoria('Mayusculas')" class="btn-cat">Mayúsculas</button>
+        <button onclick="filtrarPorCategoria('Terminos Militares')" class="btn-cat">Términos Militares</button>
+        <button onclick="filtrarPorCategoria('Lenguaje Militar')" class="btn-cat">Lenguaje Militar</button>
+    </div>
+
+    <input type="text" id="searchBar" placeholder="🔍 Escribe un concepto para buscar..." onkeyup="filterTerms()">
+    
     <ul class="term-list" id="termList">
         </ul>
 </div>
@@ -30,58 +120,70 @@
 <script>
     let datosGlosario = [];
 
-    // 1. Cargar los datos desde Sheet.best
     async function cargarDatos() {
         try {
-            // Tu URL de Sheet.best ya está aquí
             const respuesta = await fetch('https://api.sheetbest.com/sheets/6d927b0b-daeb-4fd3-b4a7-860663d0abef');
             datosGlosario = await respuesta.json();
-            
-            // Verificamos en consola si llegan los datos (puedes verlo con F12)
-            console.log("Datos recibidos:", datosGlosario);
-            
-            mostrarTerminos(datosGlosario);
+            console.log("Datos cargados correctamente");
         } catch (error) {
-            console.error("Error cargando el glosario:", error);
-            document.getElementById('termList').innerHTML = "<li>Error al cargar los términos.</li>";
+            console.error("Error cargando datos:", error);
+            document.getElementById('termList').innerHTML = "<li>Error al conectar con la base de datos.</li>";
         }
     }
 
-    // 2. Función para pintar los términos en el HTML (Corregida)
-    function mostrarTerminos(listaParaPintar) {
+    function mostrarTerminos(lista) {
         const listaHTML = document.getElementById('termList');
         listaHTML.innerHTML = ""; 
 
-        // Usamos el nombre correcto de la variable que recibe los datos
-        listaParaPintar.forEach(item => {
+        if (lista.length === 0) {
+            listaHTML.innerHTML = "<li style='text-align:center; color:gray;'>No se encontraron resultados.</li>";
+            return;
+        }
+
+        lista.forEach(item => {
             const li = document.createElement('li');
             li.className = 'term-item';
-            
-            // Usamos Concepto y Definicion tal cual están en tu Google Sheet
             li.innerHTML = `
-                <span class="term-title">${item.Concepto || 'Sin título'}</span>
-                <div class="term-definition">${item.Definicion || 'Sin definición'}</div>
+                <span class="term-title">${item.Concepto}</span>
+                <div class="term-definition">${item.Definicion}</div>
             `;
             listaHTML.appendChild(li);
         });
     }
 
-    // 3. Función de búsqueda
-    function filterTerms() {
-        const busqueda = document.getElementById('searchBar').value.toLowerCase();
-        const items = document.getElementsByClassName('term-item');
-
-        Array.from(items).forEach(item => {
-            const texto = item.innerText.toLowerCase();
-            if (texto.includes(busqueda)) {
-                item.classList.remove('hidden');
-            } else {
-                item.classList.add('hidden');
-            }
-        });
+    function filtrarPorCategoria(cat) {
+        // Limpiamos la barra de búsqueda al cambiar de categoría
+        document.getElementById('searchBar').value = "";
+        
+        if (cat === 'Todos') {
+            mostrarTerminos(datosGlosario);
+        } else {
+            // Filtra comparando con la columna 'Categoria' de tu Excel
+            const filtrados = datosGlosario.filter(item => item.Categoria === cat);
+            mostrarTerminos(filtrados);
+        }
     }
 
-    // Ejecutar la carga al iniciar
+    function filterTerms() {
+    const busqueda = document.getElementById('searchBar').value.toLowerCase();
+    const listaHTML = document.getElementById('termList');
+    
+    // Si la barra de búsqueda está vacía, limpiamos la lista y salimos de la función
+    if (busqueda === "") {
+        listaHTML.innerHTML = "";
+        return;
+    }
+
+    // Si hay texto, filtramos los datos
+    const filtrados = datosGlosario.filter(item => {
+        return item.Concepto.toLowerCase().includes(busqueda) || 
+               item.Definicion.toLowerCase().includes(busqueda);
+    });
+    
+    mostrarTerminos(filtrados);
+}
+
+    // Iniciar la carga
     cargarDatos();
 </script>
 
