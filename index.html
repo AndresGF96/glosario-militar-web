@@ -8,162 +8,151 @@
         :root {
             --verde-olivo: #4B5320;
             --verde-tierra: #353a16;
-            --arena: #f2e8cf;
-            --blanco-humo: #f8f9fa;
+            --blanco: #ffffff;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background-color: #e9ecef; padding: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: #e9ecef; padding: 20px; display: flex; justify-content: center; }
 
         .container { 
-            max-width: 800px; margin: auto; background: white; padding: 30px; 
-            border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            border-top: 8px solid var(--verde-olivo);
+            width: 100%; max-width: 750px; background: var(--blanco); 
+            padding: 40px; border-radius: 10px; border-top: 10px solid var(--verde-olivo);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
 
-        h1 { text-align: center; color: var(--verde-olivo); text-transform: uppercase; }
+        h1 { text-align: center; color: var(--verde-olivo); text-transform: uppercase; margin-bottom: 30px; }
 
-        .categories-nav { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 25px; }
+        .categories-nav { display: flex; justify-content: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
 
         .btn-cat {
             background-color: var(--verde-olivo); color: white; border: none;
-            padding: 10px 20px; border-radius: 25px; cursor: pointer;
-            font-weight: bold; transition: all 0.3s ease; text-transform: uppercase; font-size: 0.85em;
+            padding: 12px 20px; border-radius: 25px; cursor: pointer;
+            font-weight: bold; font-size: 0.85em; text-transform: uppercase; transition: 0.3s;
         }
 
-        .btn-cat.active { background-color: var(--verde-tierra); border: 2px solid var(--arena); }
+        .btn-cat.active { background-color: var(--verde-tierra); transform: scale(1.05); border: 2px solid #f2e8cf; }
 
-        #searchBar { 
-            width: 100%; padding: 15px; margin-bottom: 25px; border: 2px solid #ced4da; 
-            border-radius: 5px; font-size: 16px; box-sizing: border-box;
+        /* ZONA QUE CAMBIA: De mensaje a barra de búsqueda */
+        #zona-busqueda { min-height: 80px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+
+        .instruccion-inicial {
+            font-weight: bold; font-size: 1.3em; color: var(--verde-olivo); text-align: center; text-transform: uppercase;
         }
 
-        .term-list { list-style: none; padding: 0; }
+        #searchBar {
+            width: 100%; padding: 15px; border: 2px solid #ced4da; border-radius: 5px; font-size: 16px; outline: none;
+        }
+
+        .term-list { list-style: none; padding: 0; margin-top: 20px; }
         .term-item { 
-            background: var(--blanco-humo); border-left: 5px solid var(--verde-olivo); 
-            margin-bottom: 15px; padding: 20px; border-radius: 4px; animation: fadeIn 0.5s ease;
+            padding: 20px; border-left: 5px solid var(--verde-olivo); 
+            background: #f8f9fa; margin-bottom: 15px; border-radius: 4px;
+            animation: fadeIn 0.3s ease;
         }
+        .term-title { font-weight: bold; color: var(--verde-olivo); font-size: 1.2em; display: block; margin-bottom: 5px; }
+        .term-definition { color: #444; text-align: justify; line-height: 1.5; }
 
-        .term-title { font-weight: bold; color: var(--verde-olivo); font-size: 1.3em; display: block; }
-        .term-definition { color: #444; text-align: justify; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🎖️ Glosario de Militar</h1>
+    <h1>GLOSARIO MILITAR</h1>
     
     <div class="categories-nav">
-        <button onclick="filtrarPorCategoria('Siglas', this)" class="btn-cat">Mayúsculas / Siglas</button>
-        <button onclick="filtrarPorCategoria('Términos Militares', this)" class="btn-cat">Términos Militares</button>
-        <button onclick="filtrarPorCategoria('Expresión gramat', this)" class="btn-cat">Expresión Gramatical</button>
+        <button onclick="activarCategoria('Siglas', this)" class="btn-cat">Mayúsculas / Siglas</button>
+        <button onclick="activarCategoria('Términos Militares', this)" class="btn-cat">Términos Militares</button>
+        <button onclick="activarCategoria('Expresión gramat', this)" class="btn-cat">Expresión Gramatical</button>
     </div>
 
-    <input type="text" id="searchBar" placeholder="🔍 Primero seleccione una categoría..." onkeyup="filterTerms()">
-    
-    <ul class="term-list" id="termList">
-        <li style="text-align:center; color:gray; padding: 20px;">Cargando datos del cuartel...</li>
-    </ul>
+    <div id="zona-busqueda">
+        <p class="instruccion-inicial">PRIMERO SELECCIONE UNA CATEGORÍA</p>
+    </div>
+
+    <ul id="termList" class="term-list"></ul>
 </div>
 
 <script>
     let datosGlosario = [];
-    let categoriaActiva = ""; // Aquí guardaremos el nombre exacto que viene del Excel
+    let categoriaActiva = "";
 
-    async function cargarDatos() {
+    async function cargarBD() {
         try {
-            const respuesta = await fetch('https://api.sheetbest.com/sheets/6d927b0b-daeb-4fd3-b4a7-860663d0abef');
-            datosGlosario = await respuesta.json();
-            document.getElementById('termList').innerHTML = "<li style='text-align:center; color:green;'>✅ Base de datos lista.</li>";
-        } catch (error) {
-            document.getElementById('termList').innerHTML = "<li>❌ Error de conexión.</li>";
-        }
+            const res = await fetch('https://api.sheetbest.com/sheets/6d927b0b-daeb-4fd3-b4a7-860663d0abef');
+            datosGlosario = await res.json();
+        } catch (e) { console.error("Error de conexión"); }
     }
 
-function normalizar(t) {
-    return t.toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Quita tildes
-        .replace(/\b(como se escribe|que es|que son|significado de|definicion de|donde dice|el|la|los|las|un|una)\b/g, "")
-        .trim();
-}
+    // NORMALIZAR PARA IGNORAR TILDES Y MAYÚSCULAS
+    function normalizar(texto) {
+        return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    }
 
-    function mostrarTerminos(lista) {
-        const listaHTML = document.getElementById('termList');
-        listaHTML.innerHTML = ""; 
+    function activarCategoria(cat, boton) {
+        // 1. REEMPLAZAR MENSAJE POR BARRA DE BÚSQUEDA
+        const zona = document.getElementById('zona-busqueda');
+        zona.innerHTML = `<input type="text" id="searchBar" placeholder="🔍 Buscando en ${boton.innerText}..." onkeyup="filtrarContenido()">`;
 
-        if (lista.length === 0) {
-            listaHTML.innerHTML = "<li style='text-align:center; color:gray; padding: 20px;'>No se encontraron resultados.</li>";
-            return;
-        }
+        // 2. ACTIVAR BOTÓN VISUALMENTE
+        document.querySelectorAll('.btn-cat').forEach(b => b.classList.remove('active'));
+        boton.classList.add('active');
 
-        lista.forEach(item => {
-            const li = document.createElement('li');
-            li.className = 'term-item';
-            li.innerHTML = `
-                <span class="term-title">${item.Concepto || ''}</span>
+        // 3. FILTRAR POR CATEGORÍA
+        categoriaActiva = cat;
+        const iniciales = datosGlosario.filter(item => 
+            normalizar(item.Categoria || "").includes(normalizar(cat))
+        );
+        renderizar(iniciales);
+    }
+
+    function filtrarContenido() {
+        const rawInput = document.getElementById('searchBar').value;
+        const busquedaUsuario = normalizar(rawInput);
+        
+        // PALABRAS A IGNORAR (Como se escribe, que es, etc.)
+        const conectores = ["que es", "como se escribe", "cual es el significado de", "significado de", "que significa"];
+        let terminoLimpio = busquedaUsuario;
+
+        conectores.forEach(c => {
+            if (terminoLimpio.startsWith(c)) {
+                terminoLimpio = terminoLimpio.replace(c, "").trim();
+            }
+        });
+
+        const filtrados = datosGlosario.filter(item => {
+            const catItem = normalizar(item.Categoria || "");
+            const concepto = normalizar(item.Concepto || "");
+            
+            // Solo buscar dentro de la categoría seleccionada
+            if (!catItem.includes(normalizar(categoriaActiva))) return false;
+
+            // Si la barra está vacía, mostrar todo lo de la categoría
+            if (busquedaUsuario === "") return true;
+
+            // REGLA PARA SIGLAS (Búsqueda exacta al inicio para evitar AU cuando buscas AD)
+            if (categoriaActiva === 'Siglas') {
+                return concepto === terminoLimpio || concepto.startsWith(terminoLimpio);
+            }
+
+            // BÚSQUEDA FLEXIBLE PARA OTRAS CATEGORÍAS
+            return concepto.includes(terminoLimpio) || normalizar(item.Definicion || "").includes(terminoLimpio);
+        });
+
+        renderizar(filtrados);
+    }
+
+    function renderizar(lista) {
+        const contenedor = document.getElementById('termList');
+        contenedor.innerHTML = lista.map(item => `
+            <li class="term-item">
+                <span class="term-title">${item.Concepto}</span>
                 <div class="term-definition">${item.Definicion || ''}</div>
-            `;
-            listaHTML.appendChild(li);
-        });
+            </li>
+        `).join('');
     }
 
-    function filtrarPorCategoria(catBuscada, elemento) {
-        // Buscamos en el Excel qué categoría se parece a la del botón
-        const ejemplo = datosGlosario.find(item => {
-            const cExcel = (item.Categoria || "").toLowerCase();
-            const cBoton = catBuscada.toLowerCase();
-            return cExcel.includes(cBoton) || cBoton.includes(cExcel);
-        });
-
-        // Guardamos el nombre REAL que usa el Excel (ej: "Expresión gramat")
-        categoriaActiva = ejemplo ? ejemplo.Categoria : catBuscada;
-
-        document.querySelectorAll('.btn-cat').forEach(btn => btn.classList.remove('active'));
-        elemento.classList.add('active');
-
-        const searchBar = document.getElementById('searchBar');
-        searchBar.value = ""; 
-        searchBar.placeholder = `🔍 Buscando en ${elemento.innerText}...`;
-
-        const filtrados = datosGlosario.filter(item => item.Categoria === categoriaActiva);
-        mostrarTerminos(filtrados);
-    }
-
-function filterTerms() {
-    const inputUsuario = document.getElementById('searchBar').value;
-    const busquedaLimpia = normalizar(inputUsuario);
-    
-    if (!categoriaActiva) return;
-
-    // Si no hay texto, mostramos todos los términos de la categoría seleccionada
-    if (busquedaLimpia === "") {
-        mostrarTerminos(datosGlosario.filter(item => item.Categoria === categoriaActiva));
-        return;
-    }
-
-    const filtrados = datosGlosario.filter(item => {
-        // 1. Validamos categoría
-        if (item.Categoria !== categoriaActiva) return false;
-
-        const concepto = normalizar(item.Concepto || "");
-        const definicion = normalizar(item.Definicion || "");
-
-        // 2. LÓGICA PARA SIGLAS (Mayúsculas / Siglas)
-        // Solo mostramos si el concepto es EXACTAMENTE lo que se escribió
-        if (categoriaActiva.includes("Siglas") || categoriaActiva.includes("MAYÚSCULAS")) {
-            return concepto === busquedaLimpia;
-        }
-
-        // 3. LÓGICA PARA LAS DEMÁS CATEGORÍAS (Términos / Gramática)
-        // Aquí sí permitimos que busque dentro del texto para ser flexible
-        return concepto.includes(busquedaLimpia) || definicion.includes(busquedaLimpia);
-    });
-
-    mostrarTerminos(filtrados);
-}
-
-    cargarDatos();
+    cargarBD();
 </script>
+
 </body>
 </html>
