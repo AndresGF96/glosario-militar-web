@@ -130,29 +130,38 @@ function normalizar(t) {
         mostrarTerminos(filtrados);
     }
 
-    function filterTerms() {
-        const inputUsuario = document.getElementById('searchBar').value;
-        const busquedaLimpia = normalizar(inputUsuario);
-        
-        if (!categoriaActiva) return;
+function filterTerms() {
+    const inputUsuario = document.getElementById('searchBar').value;
+    const busquedaLimpia = normalizar(inputUsuario);
+    
+    if (!categoriaActiva) return;
 
-        // Si no hay texto, mostramos toda la categoría activa
-        if (busquedaLimpia === "") {
-            mostrarTerminos(datosGlosario.filter(item => item.Categoria === categoriaActiva));
-            return;
+    // Si no hay texto, mostramos todos los términos de la categoría seleccionada
+    if (busquedaLimpia === "") {
+        mostrarTerminos(datosGlosario.filter(item => item.Categoria === categoriaActiva));
+        return;
+    }
+
+    const filtrados = datosGlosario.filter(item => {
+        // 1. Validamos categoría
+        if (item.Categoria !== categoriaActiva) return false;
+
+        const concepto = normalizar(item.Concepto || "");
+        const definicion = normalizar(item.Definicion || "");
+
+        // 2. LÓGICA PARA SIGLAS (Mayúsculas / Siglas)
+        // Solo mostramos si el concepto es EXACTAMENTE lo que se escribió
+        if (categoriaActiva.includes("Siglas") || categoriaActiva.includes("MAYÚSCULAS")) {
+            return concepto === busquedaLimpia;
         }
 
-        // Filtramos: debe ser la misma categoría Y coincidir el texto
-        const filtrados = datosGlosario.filter(item => {
-            const esMismaCat = item.Categoria === categoriaActiva;
-            const concepto = normalizar(item.Concepto || "");
-            const definicion = normalizar(item.Definicion || "");
-            
-            return esMismaCat && (concepto.includes(busquedaLimpia) || definicion.includes(busquedaLimpia));
-        });
+        // 3. LÓGICA PARA LAS DEMÁS CATEGORÍAS (Términos / Gramática)
+        // Aquí sí permitimos que busque dentro del texto para ser flexible
+        return concepto.includes(busquedaLimpia) || definicion.includes(busquedaLimpia);
+    });
 
-        mostrarTerminos(filtrados);
-    }
+    mostrarTerminos(filtrados);
+}
 
     cargarDatos();
 </script>
