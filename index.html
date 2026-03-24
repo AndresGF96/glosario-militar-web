@@ -77,36 +77,35 @@
     let categoriaActiva = "";
 
     async function cargarBD() {
+    // Usamos el ID de la hoja y el GID (Hoja1 suele ser 0)
     const idHoja = '1IfEtvmo-IVCoL-9Y8XgC81OycP2Pvw1lv9ntKD5ABBs';
-    const url = `https://docs.google.com/spreadsheets/d/${idHoja}/gviz/tq?tqx=out:json`;
+    const url = `https://docs.google.com/spreadsheets/d/${idHoja}/gviz/tq?tqx=out:json&gid=0`;
 
     try {
-        console.log("Intentando conectar con Google...");
+        console.log("Conectando con Google...");
         const res = await fetch(url);
+        
+        if (!res.ok) throw new Error("Google respondió con error 404");
+
         const texto = await res.text();
         
-        // Esto nos dirá en la consola qué está llegando realmente
-        console.log("Respuesta recibida de Google");
-
-        const json = JSON.parse(texto.substr(47).slice(0, -2));
+        // Esta línea limpia el JSON de Google de forma más segura
+        const inicio = texto.indexOf('{');
+        const fin = texto.lastIndexOf('}') + 1;
+        const jsonTexto = texto.substring(inicio, fin);
+        const json = JSON.parse(jsonTexto);
         
-        // AJUSTE DE COLUMNAS: Verifica si Categoria es la columna A (0), Concepto B (1) y Definicion C (2)
         datosGlosario = json.table.rows.map(row => ({
+            // Ajustamos según tu Excel: A=Categoría, B=Concepto, C=Definición
             Categoria: row.c[0] ? (row.c[0].v || '') : '',
             Concepto: row.c[1] ? (row.c[1].v || '') : '',
             Definicion: row.c[2] ? (row.c[2].v || '') : ''
         }));
 
-        console.log("Datos procesados correctamente:", datosGlosario.length, "términos cargados.");
-        
-        // Si después de cargar quieres que se vea algo de inmediato:
-        if(datosGlosario.length > 0) {
-            console.log("Listo para mostrar datos.");
-        }
-
+        console.log("✅ Éxito:", datosGlosario.length, "términos listos.");
     } catch (e) { 
-        console.error("ERROR CRÍTICO:", e.message);
-        alert("El firewall de este equipo está bloqueando la conexión a los datos.");
+        console.error("❌ ERROR CRÍTICO:", e.message);
+        // Si falla el 404, es posible que el ID necesite ser verificado de nuevo
     }
 }
 
