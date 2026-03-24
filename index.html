@@ -77,37 +77,36 @@
     let categoriaActiva = "";
 
     async function cargarBD() {
-    // ASEGÚRATE DE QUE ESTE ID SEA EL DE TU NAVEGADOR
-    const idHoja ='1IfEtvmo-IVCoL-9Y8XgC81OycP2Pvw1lv9ntKD5ABBs'; 
-    const url =`https://docs.google.com/spreadsheets/d/${idHoja}/gviz/tq?tqx=out:json`;
+    // ID extraído directamente de tu barra de direcciones
+    const idHoja = '1IfEtvmo-IVCoL-9Y8XgC81OycP2Pvw1lv9ntKD5ABBs';
+    const url = `https://docs.google.com/spreadsheets/d/${idHoja}/gviz/tq?tqx=out:json`;
 
     try {
+        console.log("Conectando con Google...");
         const res = await fetch(url);
-        if (!res.ok) throw new Error("Error 404: No se encontró la hoja. Revisa el ID.");
+        if (!res.ok) throw new Error("No se encontró la hoja (404)");
 
         const texto = await res.text();
-        
-        // Limpieza profunda del formato de Google
         const inicio = texto.indexOf('{');
         const fin = texto.lastIndexOf('}') + 1;
         const json = JSON.parse(texto.substring(inicio, fin));
         
         datosGlosario = json.table.rows.map(row => ({
-            Categoria: row.c[0] ? (row.c[0].v || '') : '',
-            Concepto: row.c[1] ? (row.c[1].v || '') : '',
-            Definicion: row.c[2] ? (row.c[2].v || '') : ''
+            // Usamos trim() para que no fallen por espacios invisibles
+            Categoria: row.c[0] ? String(row.c[0].v || '').trim() : '',
+            Concepto: row.c[1] ? String(row.c[1].v || '').trim() : '',
+            Definicion: row.c[2] ? String(row.c[2].v || '').trim() : ''
         }));
 
         console.log("✅ DATOS CARGADOS:", datosGlosario.length);
         
-        // Esto te avisará en pantalla si funcionó
+        // Esto confirmará que los datos bajaron
         if(datosGlosario.length > 0) {
             alert("¡Conexión exitosa! " + datosGlosario.length + " términos cargados.");
         }
-
     } catch (e) { 
-        console.error("Fallo:", e.message);
-        alert("Sigue fallando: " + e.message);
+        console.error("Error:", e.message);
+        alert("Error de conexión: " + e.message);
     }
 }
     // NORMALIZAR PARA IGNORAR TILDES Y MAYÚSCULAS
