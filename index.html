@@ -77,38 +77,39 @@
     let categoriaActiva = "";
 
     async function cargarBD() {
-    // Usamos el ID de la hoja y el GID (Hoja1 suele ser 0)
-    const idHoja = '1IfEtvmo-IVCoL-9Y8XgC81OycP2Pvw1lv9ntKD5ABBs';
-    const url = `https://docs.google.com/spreadsheets/d/${idHoja}/gviz/tq?tqx=out:json&gid=0`;
+    // ASEGÚRATE DE QUE ESTE ID SEA EL DE TU NAVEGADOR
+    const idHoja = '1IfEtvmo-IVCoL-9Y8XgC81OycP2Pvw1lv9ntKD5ABBs'; 
+    const url = `https://docs.google.com/spreadsheets/d/${idHoja}/gviz/tq?tqx=out:json`;
 
     try {
-        console.log("Conectando con Google...");
         const res = await fetch(url);
-        
-        if (!res.ok) throw new Error("Google respondió con error 404");
+        if (!res.ok) throw new Error("Error 404: No se encontró la hoja. Revisa el ID.");
 
         const texto = await res.text();
         
-        // Esta línea limpia el JSON de Google de forma más segura
+        // Limpieza profunda del formato de Google
         const inicio = texto.indexOf('{');
         const fin = texto.lastIndexOf('}') + 1;
-        const jsonTexto = texto.substring(inicio, fin);
-        const json = JSON.parse(jsonTexto);
+        const json = JSON.parse(texto.substring(inicio, fin));
         
         datosGlosario = json.table.rows.map(row => ({
-            // Ajustamos según tu Excel: A=Categoría, B=Concepto, C=Definición
             Categoria: row.c[0] ? (row.c[0].v || '') : '',
             Concepto: row.c[1] ? (row.c[1].v || '') : '',
             Definicion: row.c[2] ? (row.c[2].v || '') : ''
         }));
 
-        console.log("✅ Éxito:", datosGlosario.length, "términos listos.");
+        console.log("✅ DATOS CARGADOS:", datosGlosario.length);
+        
+        // Esto te avisará en pantalla si funcionó
+        if(datosGlosario.length > 0) {
+            alert("¡Conexión exitosa! " + datosGlosario.length + " términos cargados.");
+        }
+
     } catch (e) { 
-        console.error("❌ ERROR CRÍTICO:", e.message);
-        // Si falla el 404, es posible que el ID necesite ser verificado de nuevo
+        console.error("Fallo:", e.message);
+        alert("Sigue fallando: " + e.message);
     }
 }
-
     // NORMALIZAR PARA IGNORAR TILDES Y MAYÚSCULAS
     function normalizar(texto) {
         return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
