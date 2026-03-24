@@ -77,30 +77,34 @@
     let categoriaActiva = "";
 
     async function cargarBD() {
-    // ID extraído directamente de tu barra de direcciones
+    // ID limpio sin caracteres extraños
     const idHoja = '1IfEtvmo-IVCoL-9Y8XgC81OycP2Pvw1lv9ntKD5ABBs';
     const url = `https://docs.google.com/spreadsheets/d/${idHoja}/gviz/tq?tqx=out:json`;
 
     try {
         console.log("Conectando con Google...");
         const res = await fetch(url);
+        
         if (!res.ok) throw new Error("No se encontró la hoja (404)");
 
         const texto = await res.text();
         const inicio = texto.indexOf('{');
         const fin = texto.lastIndexOf('}') + 1;
-        const json = JSON.parse(texto.substring(inicio, fin));
+        const jsonTexto = texto.substring(inicio, fin);
+        const json = JSON.parse(jsonTexto);
         
-        datosGlosario = json.table.rows.map(row => ({
-            // Usamos trim() para que no fallen por espacios invisibles
-            Categoria: row.c[0] ? String(row.c[0].v || '').trim() : '',
-            Concepto: row.c[1] ? String(row.c[1].v || '').trim() : '',
-            Definicion: row.c[2] ? String(row.c[2].v || '').trim() : ''
-        }));
+        datosGlosario = json.table.rows.map(row => {
+            // Función para extraer texto de forma segura
+            const getVal = (cell) => (cell && cell.v !== null) ? String(cell.v).trim() : '';
+            return {
+                Categoria: getVal(row.c[0]),
+                Concepto: getVal(row.c[1]),
+                Definicion: getVal(row.c[2])
+            };
+        });
 
-        console.log("✅ DATOS CARGADOS:", datosGlosario.length);
+        console.log("✅ Éxito:", datosGlosario.length, "términos cargados.");
         
-        // Esto confirmará que los datos bajaron
         if(datosGlosario.length > 0) {
             alert("¡Conexión exitosa! " + datosGlosario.length + " términos cargados.");
         }
