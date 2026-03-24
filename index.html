@@ -77,25 +77,36 @@
     let categoriaActiva = "";
 
     async function cargarBD() {
-    // Usamos el ID de tu hoja que vimos en la imagen: 1IfEtvmo-IVCoL-9Y8XgC81OycP2Pvw1lv9ntKD5ABBs
     const idHoja = '1IfEtvmo-IVCoL-9Y8XgC81OycP2Pvw1lv9ntKD5ABBs';
     const url = `https://docs.google.com/spreadsheets/d/${idHoja}/gviz/tq?tqx=out:json`;
 
     try {
+        console.log("Intentando conectar con Google...");
         const res = await fetch(url);
         const texto = await res.text();
-        // Limpiamos la respuesta de Google para que sea un JSON puro
+        
+        // Esto nos dirá en la consola qué está llegando realmente
+        console.log("Respuesta recibida de Google");
+
         const json = JSON.parse(texto.substr(47).slice(0, -2));
         
-        // Mapeamos los datos para que coincidan con tu código actual (Concepto, Definicion, Categoria)
+        // AJUSTE DE COLUMNAS: Verifica si Categoria es la columna A (0), Concepto B (1) y Definicion C (2)
         datosGlosario = json.table.rows.map(row => ({
-            Categoria: row.c[0] ? row.c[0].v : '',
-            Concepto: row.c[1] ? row.c[1].v : '',
-            Definicion: row.c[2] ? row.c[2].v : ''
+            Categoria: row.c[0] ? (row.c[0].v || '') : '',
+            Concepto: row.c[1] ? (row.c[1].v || '') : '',
+            Definicion: row.c[2] ? (row.c[2].v || '') : ''
         }));
-        console.log("Base de datos cargada directamente de Google");
+
+        console.log("Datos procesados correctamente:", datosGlosario.length, "términos cargados.");
+        
+        // Si después de cargar quieres que se vea algo de inmediato:
+        if(datosGlosario.length > 0) {
+            console.log("Listo para mostrar datos.");
+        }
+
     } catch (e) { 
-        console.error("Error conectando directamente:", e); 
+        console.error("ERROR CRÍTICO:", e.message);
+        alert("El firewall de este equipo está bloqueando la conexión a los datos.");
     }
 }
 
