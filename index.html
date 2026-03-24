@@ -77,11 +77,27 @@
     let categoriaActiva = "";
 
     async function cargarBD() {
-        try {
-            const res = await fetch('https://api.sheetbest.com/sheets/6d927b0b-daeb-4fd3-b4a7-860663d0abef');
-            datosGlosario = await res.json();
-        } catch (e) { console.error("Error de conexión"); }
+    // Usamos el ID de tu hoja que vimos en la imagen: 1IfEtvmo-IVCoL-9Y8XgC81OycP2Pvw1lv9ntKD5ABBs
+    const idHoja = '1IfEtvmo-IVCoL-9Y8XgC81OycP2Pvw1lv9ntKD5ABBs';
+    const url = `https://docs.google.com/spreadsheets/d/${idHoja}/gviz/tq?tqx=out:json`;
+
+    try {
+        const res = await fetch(url);
+        const texto = await res.text();
+        // Limpiamos la respuesta de Google para que sea un JSON puro
+        const json = JSON.parse(texto.substr(47).slice(0, -2));
+        
+        // Mapeamos los datos para que coincidan con tu código actual (Concepto, Definicion, Categoria)
+        datosGlosario = json.table.rows.map(row => ({
+            Categoria: row.c[0] ? row.c[0].v : '',
+            Concepto: row.c[1] ? row.c[1].v : '',
+            Definicion: row.c[2] ? row.c[2].v : ''
+        }));
+        console.log("Base de datos cargada directamente de Google");
+    } catch (e) { 
+        console.error("Error conectando directamente:", e); 
     }
+}
 
     // NORMALIZAR PARA IGNORAR TILDES Y MAYÚSCULAS
     function normalizar(texto) {
